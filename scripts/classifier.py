@@ -6,6 +6,7 @@ from keras.applications.mobilenet import MobileNet
 from keras.applications.mobilenet import preprocess_input
 from cv_bridge import CvBridge, CvBridgeError
 from keras.models import Model
+from PIL import Image
 import numpy as np
 import rospkg
 import rospy
@@ -19,16 +20,14 @@ def get_image_feature(bgr_image):
   
   print('Received Image Shape: {}'.format(bgr_image.shape))
   rgb_image = cv2.cvtColor(bgr_image,cv2.COLOR_BGR2RGB)
-  resize_img = rgb_image.reshape((1,rgb_image.shape[0],
-                                    rgb_image.shape[1],
-                                    rgb_image.shape[2]))
-
-  # prepare the image for the MobileNet model
-  image = preprocess_input(resize_img)
+  reformed_img= Image.fromarray(rgb_image)
+  array_img = np.array(reformed_img,dtype=float)                    
+  reshaped_img = np.expand_dims(array_img, axis=0)
+  reshaped_img /= 255.0
 
   model = MobileNet(weights= 'imagenet', input_shape=(224, 224,3))
   model = Model(inputs=model.inputs, outputs=model.layers[-2].output)
-  feature = model.predict(image)
+  feature = model.predict(reshaped_img)
   print('Feature shape of an Image: {}'.format(feature.shape))
   return feature
 
@@ -59,7 +58,7 @@ def remove_labels(model_features):
 
 def reshape_label_array(feature_data, label_list):
   """Label list is reshaped (dataset size, number of classes)"""
-  no_classes = 59
+  no_classes = int(max(label_list) + 1)
   rows, columns = feature_data.shape
   label_length= no_classes * rows
   loaded_labels= [0] * label_length
@@ -94,7 +93,14 @@ def shutdown_fun():
 
 def handle_request(request):
   """This method is called when a service request is received"""
-
+  
+  # Get package path
+  rospack = rospkg.RosPack()
+  package_path = rospack.get_path('rs_nn_image_feature_classifier')
+  
+  # Path of the feature.npy file
+  path = package_path + '/scripts/features.npy'
+  
   # Load data from service request
   ros_rgb_image   = request.rgb
 
@@ -107,11 +113,8 @@ def handle_request(request):
   except CvBridgeError as e:
     print(e)
   
-  rospack = rospkg.RosPack()
-  package_path = rospack.get_path('rs_nn_image_feature_classifier')
   img_feature = get_image_feature(cv_rgb_image)
 
-  path = package_path + '/scripts/features.npy'
   feature_data = get_model_feature(path)
 
   formated_data, classes = remove_labels(feature_data)
