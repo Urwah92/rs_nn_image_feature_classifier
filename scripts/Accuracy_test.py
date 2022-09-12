@@ -104,7 +104,6 @@ def visualiztion(train_features,val_features, train_y,val_y):
   data = np.array(np.vstack([train_features]), dtype=np.float64)
   target = np.hstack([np.where(train_y == 1)[1]])
   embedding = umap.UMAP().fit_transform(data, y=target)
-  plt.figure()
   plt.scatter(*embedding.T, s=15, c=target, cmap='Spectral', alpha=1.0)
   plt.show()
   
