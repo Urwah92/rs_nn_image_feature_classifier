@@ -14,6 +14,15 @@ import rospy
 import cv2
 import os
 
+#Dataset path
+rospack = rospkg.RosPack()
+package_path = rospack.get_path('rs_nn_image_feature_classifier')
+label_dir = package_path + "/dataset/val_data"
+
+#Saved file path
+path= package_path + "/scripts/features.npy"
+
+
 def get_image_feature(bgr_image):
   """Extract the features of rgb_image using MobileNet model"""
   bgr_image= cv2.resize(bgr_image,(224,224))
@@ -23,19 +32,9 @@ def get_image_feature(bgr_image):
   cv2.imshow("image",rgb_image)
   cv2.waitKey(0)
   reformed_img= Image.fromarray(rgb_image)
-  array_img = np.array(reformed_img,dtype=float) 
-  print(array_img.shape)                   
+  array_img = np.array(reformed_img,dtype=float)                   
   reshaped_img = np.expand_dims(array_img, axis=0)
-  print(reshaped_img.shape)
   reshaped_img /= 255.0
-  
-  #resize_img = rgb_image.reshape((1,rgb_image.shape[0],
-           #                         rgb_image.shape[1],
-         #
-         #                            rgb_image.shape[2]))
-
-  # prepare the image for the MobileNet model
-  #image = preprocess_input(resize_img)
 
   model = MobileNet(weights= 'imagenet', input_shape=(224, 224,3))
   model = Model(inputs=model.inputs, outputs=model.layers[-2].output)
@@ -101,31 +100,31 @@ def knn_classifier(model_features, image_feature, label_arr):
   y_pred = classifier_model.predict(image_feature)
   return y_pred
 
-#Dataset path
-rospack = rospkg.RosPack()
-package_path = rospack.get_path('rs_nn_image_feature_classifier')
-label_dir = package_path + "/dataset/val_data"
-#label_base_dir = os.listdir(label_dir)
-
-#Saved file path
-path= package_path + "/scripts/features.npy"
+def visualiztion(train_features,val_features, train_y,val_y):
+  data = np.array(np.vstack([train_features]), dtype=np.float64)
+  target = np.hstack([np.where(train_y == 1)[1]])
+  embedding = umap.UMAP().fit_transform(data, y=target)
+  plt.figure()
+  plt.scatter(*embedding.T, s=15, c=target, cmap='Spectral', alpha=1.0)
+  plt.show()
+  
 
 feature_data = get_model_feature(path)
 
 formated_data, classes = remove_labels(feature_data)
 
-no_classes = 20
+no_classes = int(max(classes) + 1)
 rows, _ = feature_data.shape
 reshaped_label = reshape_label_array(no_classes, rows, classes)
 
 val_feature, val_y = val_function(label_dir)
 
 class_id = knn_classifier(formated_data, val_feature, reshaped_label)
-print(formated_data.shape)
-print(classes.shape)
-print(val_feature.shape)
-print(class_id.shape)
-print(val_y.shape)
 scores = metrics.accuracy_score(val_y, class_id)
-print(scores)
-print(metrics.confusion_matrix(val_y.argmax(axis=1),class_id.argmax(axis=1)))
+print('Training dataset feature vector: {}'.format(formated_data.shape))
+print('Training dataset class vector: {}'.format(classes.shape))
+print('Validation dataset feature vector: {}'.format(val_feature.shape))
+print('Validation dataset class vector: {}'.format(val_y.shape))
+print('Percentage Accuracy: {}'.format(scores))
+print('Confusion Matrix: \n {}'.format(metrics.confusion_matrix(val_y.argmax(axis=1),class_id.argmax(axis=1))))
+visualiztion(formated_data,val_feature, reshaped_label, val_y)
