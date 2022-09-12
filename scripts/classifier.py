@@ -84,7 +84,7 @@ def knn_classifier(model_features, image_feature, label_arr):
   print('Class_id: {} '.format(y_pred[0]))
   print('class_conffidence: {}'.format(class_confidence))
   print(np.where(y_pred==1))
-  return y_pred[0], class_confidence
+  return y_pred[0], class_confidence, np.where(y_pred==1)[1]
 
 
 def shutdown_fun():
@@ -121,13 +121,36 @@ def handle_request(request):
 
   reshaped_label = reshape_label_array(formated_data, classes)
 
-  class_id, confidence = knn_classifier(formated_data, img_feature, reshaped_label)
+  class_id, confidence, label_index = knn_classifier(formated_data, img_feature, reshaped_label)
 
 
   response= classifierResponse()
   response.class_ids = list(class_id)
   response.success = True
   response.class_confidence = list(confidence)
+  class_labels = {'AlbiHimbeerJuice': 0, 'BlackCeramicBowl': 1, 'BlueCampingCup': 2, 
+                  'BlueCeramicIkeaMug': 3, 'BlueMetalPlateWhiteSpeckles': 4, 'BluePlasticBowl': 5, 
+                  'BluePlasticFork': 6, 'BluePlasticKnife': 7, 'BluePlasticSpoon': 8, 
+                  'ComdoCappuccinoClassico': 9, 'CupEcoOrange': 10, 'EdekaRedBowl': 11, 
+                  'ElBrygCoffee': 12, 'FryingPan': 13, 'FryingSpatula': 14, 'HelaCurryKetchup': 15, 
+                  'JaMilch': 16, 'JodSalz': 17, 'KelloggsCornFlakes': 18, 'KelloggsToppasMini': 19, 
+                  'KnusperSchokoKeks': 20, 'KoellnMuesliKnusperHonigNuss': 21, 'LargeGreySpoon': 22, 
+                  'LinuxCup': 23, 'LionCerealBox': 24, 'MarkenSalz': 25, 'MeerSalz': 26, 
+                  'MondaminPancakeMix': 27, 'NesquikCereal': 28, 'PfannerGruneIcetea': 29, 
+                  'PfannerPfirsichIcetea': 30, 'PopcornPot': 31, 'PringlesPaprika': 32, 'PringlesSalt': 33, 
+                  'PringlesVinegar': 34, 'RedMetalBowlWhiteSpeckles': 35, 'RedMetalCupWhiteSpeckles': 36, 
+                  'RedMetalPlateWhiteSpeckles': 37, 'RedPlasticFork': 38, 'RedPlasticKnife': 39, 
+                  'RedPlasticSpoon': 40, 'ReineButterMilch': 41, 'SeverinPancakeMaker': 42, 
+                  'SiggBottle': 43, 'SlottedSpatula': 44, 'SojaMilch': 45, 'SpitzenReis': 46, 
+                  'Toaster': 47, 'TomatoAlGustoBasilikum': 48, 'TomatoSauceOroDiParma': 49, 
+                  'VollMilch': 50, 'WeideMilchSmall': 51, 'WhiteBottle': 52, 'WhiteCeramicIkeaBowl': 53, 
+                  'WhitePitcher': 54, 'YcbFork': 55, 'YcbKnife': 56, 'YellowCeramicPlate': 57, 'YellowPitcher': 58}
+  if label_index.size > 0:
+    key = [k for k, v in class_labels.items() if v == label_index]
+    print("Key: ", str(key[0]))
+    response.label= str(key[0])
+  elif label_index.size == 0:
+    response.label= "no_object"
   return response
 
 
