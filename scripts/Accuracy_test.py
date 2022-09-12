@@ -1,18 +1,16 @@
 from sklearn.neighbors import KNeighborsClassifier
-from rs_nn_image_feature_classifier.srv import classifier, classifierResponse
 from keras.applications.mobilenet import MobileNet
-from keras.applications.mobilenet import preprocess_input
-from cv_bridge import CvBridge, CvBridgeError
 from sklearn import metrics
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import confusion_matrix
 from keras.models import Model
 from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
+import umap
 import rospkg
-import rospy
 import cv2
-import os
+
 
 #Dataset path
 rospack = rospkg.RosPack()
