@@ -29,8 +29,6 @@ def get_image_feature(bgr_image):
   
   print('Received Image Shape: {}'.format(bgr_image.shape))
   rgb_image = cv2.cvtColor(bgr_image,cv2.COLOR_BGR2RGB)
-  cv2.imshow("image",rgb_image)
-  cv2.waitKey(0)
   reformed_img= Image.fromarray(rgb_image)
   array_img = np.array(reformed_img,dtype=float)                   
   reshaped_img = np.expand_dims(array_img, axis=0)
@@ -105,6 +103,7 @@ def visualiztion(train_features,val_features, train_y,val_y):
   target = np.hstack([np.where(train_y == 1)[1]])
   embedding = umap.UMAP().fit_transform(data, y=target)
   plt.scatter(*embedding.T, s=15, c=target, cmap='Spectral', alpha=1.0)
+  plt.title('Classification')
   plt.show()
   
 
