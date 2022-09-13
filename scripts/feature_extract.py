@@ -69,6 +69,12 @@ def add_labels_with_features(features):
     print('Reshaped feature array with labels: ', final_array.shape)
     return final_array
 
+def write_class_dic(class_labels):
+    with open('./scripts/classes.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        for key,value in class_labels.items():
+            writer.writerow([key, value])
+
 
 #Dataset path
 rospack = rospkg.RosPack()
@@ -83,6 +89,7 @@ set_dataset_dir(label_base_dir,label_dir)
 
 model = get_model()
 train = train_datagenerator()
+write_class_dic(train.class_indices)
 x, y = train.next()
 #x = get_from_train_datagen(train, 0)
 #y = get_from_train_datagen(train,1)
@@ -96,4 +103,3 @@ print('Predicted Features shape: ', features.shape)
 set_features = add_labels_with_features(features)
 with open(save_file_path, 'wb') as f:
   np.save(f, set_features)
-
