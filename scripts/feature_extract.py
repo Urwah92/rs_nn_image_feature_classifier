@@ -78,7 +78,7 @@ def write_class_dic(class_labels):
 
 #Dataset path
 rospack = rospkg.RosPack()
-package_path = rospack.get_path('knn_classifier')
+package_path = rospack.get_path('rs_nn_image_feature_classifier')
 label_dir = package_path + "/data/partial_views"
 label_base_dir = os.listdir(label_dir)
 
