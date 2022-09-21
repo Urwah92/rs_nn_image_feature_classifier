@@ -75,6 +75,14 @@ def write_class_dic(class_labels):
         for key,value in class_labels.items():
             writer.writerow([key, value])
 
+def visualiztion(train_features, train_y):
+  data = np.array(np.vstack([train_features]), dtype=np.float64)
+  target = np.hstack([np.where(train_y == 1)[1]])
+  embedding = umap.UMAP().fit_transform(data, y=target)
+  plt.scatter(*embedding.T, s=15, c=target, cmap='Spectral', alpha=1.0)
+  plt.title('Classification')
+  plt.show()
+            
 
 #Dataset path
 rospack = rospkg.RosPack()
@@ -99,6 +107,7 @@ print('Array x:', x.shape)
 
 features = model.predict(x, batch_size=500)
 print('Predicted Features shape: ', features.shape)
+visualiztion(features, y)
 
 set_features = add_labels_with_features(features)
 with open(save_file_path, 'wb') as f:
