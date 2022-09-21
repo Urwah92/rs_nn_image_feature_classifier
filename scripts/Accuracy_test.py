@@ -96,7 +96,7 @@ def knn_classifier(model_features, image_feature, label_arr):
   y_pred = classifier_model.predict(image_feature)
   return y_pred
 
-def visualiztion(train_features,val_features, train_y,val_y):
+def visualiztion(train_features, train_y):
   data = np.array(np.vstack([train_features]), dtype=np.float64)
   target = np.hstack([np.where(train_y == 1)[1]])
   embedding = umap.UMAP().fit_transform(data, y=target)
