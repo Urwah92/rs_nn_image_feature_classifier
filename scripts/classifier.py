@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #ROS server use to detect object using KNN classifier
+from random import randrange
 from sklearn.neighbors import KNeighborsClassifier
 from rs_nn_image_feature_classifier.srv import classifier, classifierResponse
 from keras.applications.mobilenet import MobileNet
@@ -11,17 +12,17 @@ import numpy as np
 import rospkg
 import rospy
 import cv2
+import csv
 
 
 def get_image_feature(bgr_image):
   """Extract the features of rgb_image using MobileNet model"""
-  print(bgr_image)
   bgr_image= cv2.resize(bgr_image,(224,224))
   
   print('Received Image Shape: {}'.format(bgr_image.shape))
   rgb_image = cv2.cvtColor(bgr_image,cv2.COLOR_BGR2RGB)
   reformed_img= Image.fromarray(rgb_image)
-  array_img = np.array(reformed_img,dtype=float)                    
+  array_img = np.array(reformed_img,dtype=float) 
   reshaped_img = np.expand_dims(array_img, axis=0)
   reshaped_img /= 255.0
 
@@ -58,7 +59,7 @@ def remove_labels(model_features):
 
 def reshape_label_array(feature_data, label_list):
   """Label list is reshaped (dataset size, number of classes)"""
-  no_classes = int(max(label_list) + 1)
+  no_classes = int(max(label_list)+1)
   rows, columns = feature_data.shape
   label_length= no_classes * rows
   loaded_labels= [0] * label_length
@@ -86,14 +87,15 @@ def knn_classifier(model_features, image_feature, label_arr):
   print(np.where(y_pred==1))
   return y_pred[0], class_confidence, np.where(y_pred==1)[1]
 
+
 def read_csv(path):
   dic = {}
   with open(path, 'r') as read_obj:
     csv_reader = csv.reader(read_obj)
-    # Iterate over each row in the csv using reader object
     for row in csv_reader:
       dic[row[0]]= row[1]
   return dic
+
 
 
 def shutdown_fun():
@@ -102,14 +104,16 @@ def shutdown_fun():
 
 def handle_request(request):
   """This method is called when a service request is received"""
-  
-  # Get package path
+   # Get package path
   rospack = rospkg.RosPack()
   package_path = rospack.get_path('rs_nn_image_feature_classifier')
   
   # Path of the feature.npy file
   path = package_path + '/scripts/features.npy'
   
+  # Path of the classes file
+  csv_path= package_path + '/scripts/classes.csv'
+
   # Load data from service request
   ros_rgb_image   = request.rgb
 
@@ -137,11 +141,13 @@ def handle_request(request):
   response.class_ids = list(class_id)
   response.success = True
   response.class_confidence = list(confidence)
+  
+  print('label Index: ', label_index)
   class_labels = read_csv(csv_path)
 
   if label_index:
     key = [k for k, v in class_labels.items() if int(v) == label_index]
-    print("Key: ", str(key[0]))
+    print("class name: ", str(key[0]))
     response.label= str(key[0])
   else:
     response.label= "no_object"

@@ -11,25 +11,19 @@ import umap
 import rospkg
 import cv2
 
-
-#Dataset path
-rospack = rospkg.RosPack()
-package_path = rospack.get_path('rs_nn_image_feature_classifier')
-label_dir = package_path + "/dataset/val_data"
-
-#Saved file path
-path= package_path + "/scripts/features.npy"
-
-
 def get_image_feature(bgr_image):
   """Extract the features of rgb_image using MobileNet model"""
   bgr_image= cv2.resize(bgr_image,(224,224))
   
   print('Received Image Shape: {}'.format(bgr_image.shape))
   rgb_image = cv2.cvtColor(bgr_image,cv2.COLOR_BGR2RGB)
+  cv2.imshow("image",rgb_image)
+  cv2.waitKey(0)
   reformed_img= Image.fromarray(rgb_image)
-  array_img = np.array(reformed_img,dtype=float)                   
+  array_img = np.array(reformed_img,dtype=float) 
+  print(array_img.shape)                   
   reshaped_img = np.expand_dims(array_img, axis=0)
+  print(reshaped_img.shape)
   reshaped_img /= 255.0
 
   model = MobileNet(weights= 'imagenet', input_shape=(224, 224,3))
@@ -77,39 +71,46 @@ def reshape_label_array(no_classes, rows, label_list):
 
 def val_function(val_path):
     model = MobileNet(weights= 'imagenet',input_shape = (224, 224,3))
-    model.summary()
     model = Model(inputs=model.inputs, outputs=model.layers[-2].output)
     
     val_datagen = ImageDataGenerator(rescale = 1./255)
     test_it = val_datagen.flow_from_directory(val_path, class_mode='categorical', batch_size= 500, target_size=(224,224))
     val_x,val_y = test_it.next()
 
-    val_features = model.predict(val_x, batch_size=50)
+    val_features = model.predict(val_x, batch_size=100)
 
     return val_features,val_y 
 
 def knn_classifier(model_features, image_feature, label_arr):
   """Use KNN classifier to predict
     returns: predicted class_id and confidence of each class"""
-  classifier_model = KNeighborsClassifier(n_neighbors=3)
+  classifier_model = KNeighborsClassifier(n_neighbors=4,weights='distance',p=1)
   classifier_model.fit(model_features,label_arr)
   y_pred = classifier_model.predict(image_feature)
   return y_pred
 
-def visualiztion(train_features, train_y):
+
+
+def visualiztion(train_features, train_y, class_dic):
   data = np.array(np.vstack([train_features]), dtype=np.float64)
   target = np.hstack([np.where(train_y == 1)[1]])
   embedding = umap.UMAP().fit_transform(data, y=target)
   plt.scatter(*embedding.T, s=15, c=target, cmap='Spectral', alpha=1.0)
-  plt.title('Classification')
   plt.show()
-  
+
+
+
+#Dataset path
+rospack = rospkg.RosPack()
+package_path = rospack.get_path('rs_nn_image_feature_classifier')
+label_dir = package_path + "/dataset/val_data"
+
+#Saved file path
+path= package_path + "/scripts/features.npy"
 
 feature_data = get_model_feature(path)
-
 formated_data, classes = remove_labels(feature_data)
-
-no_classes = int(max(classes) + 1)
+no_classes = int( max(classes + 1))
 rows, _ = feature_data.shape
 reshaped_label = reshape_label_array(no_classes, rows, classes)
 

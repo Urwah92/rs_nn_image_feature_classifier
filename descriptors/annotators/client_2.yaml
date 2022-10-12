@@ -1,6 +1,0 @@
-annotator:
-  implementation: rs_client_2
-  name: client_2
-capabilities:
-  inputs: ['rs.cv.Mat']
-
