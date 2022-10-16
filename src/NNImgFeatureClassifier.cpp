@@ -69,7 +69,7 @@ private:
     {
       rs::ImageROI image_rois = clusters[idx].rois.get();
 
-      //======================= Calculate HSV image ==========================
+      //======================= Calculate ROI image ==========================
 
       cv::Rect roi;
       rs::conversion::from(image_rois.roi(), roi);
@@ -119,7 +119,6 @@ private:
       cv::rectangle(disp, roi, rs::common::cvScalarColors[i % rs::common::numberOfColors]);
       
     }
-    //class_label.clear();
 
   }
 
