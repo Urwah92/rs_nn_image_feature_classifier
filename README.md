@@ -10,11 +10,6 @@ Working Guide:
       
               label_dir = package_path + "/data/partial_views"
       
-     •	At line 52: 
-              
-              train = train_datagen.flow_from_directory(label_dir, class_mode='categorical', batch_size=12567, target_size= (224, 224))
-  
-      Change the batch size to the maximum number of available images.
 
 3. Classifier.py is a service node which uses the features data from the features.npy file and class names from classes.csv.
 Accuracy_test.py is to check the accuracy of the validation dataset.
